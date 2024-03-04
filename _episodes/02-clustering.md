@@ -34,12 +34,21 @@ he K-means clustering algorithm is a straightforward technique aimed at pinpoint
 ![The Gartner Hype Cycle curve](https://av-eks-blogoptimized.s3.amazonaws.com/46668k-means-clustering-algorithm-in-machine-learning.png)
 [Image from analyticsvidhya](https://www.analyticsvidhya.com/blog/2021/04/k-means-clustering-simplified-in-python/)
 
+### Importing data
+
+So as we covered at the beginning of the course, you can import the data using pandas. 
+
+~~~
+import pandas as pd
+iris_df = pd.read_csv("iris.csv") ### make sure you have the right path
+~~~
+{: .language-python}
+
 ### Lets look at our data
 So firstly lets have a look at the features within our dataset: 
 
 ~~~
-data("iris")
-head(iris)
+print(iris_df.head())
 ~~~
 {: .language-r}
 
@@ -61,6 +70,24 @@ plot(iris$Petal.Length, iris$Petal.Width, pch=21, bg=c("red","green3","blue")[un
 legend("top", levels(iris$Species), pch = 21,col = c("red","green3","blue")) 
 ~~~
 {: .language-r}
+
+~~~
+sp = iris_df.drop_duplicates(subset=['variety'])
+sp = list(sp['variety'])
+print(iris_df.head())
+for opt in sp:
+    subset_df = iris_df[iris_df['variety'] == opt ]
+    plt.scatter(subset_df['petal.length'], subset_df['petal.width'], 
+                label =opt)
+
+
+plt.xlabel('petal length (cm)')
+plt.ylabel('petal width (cm)')
+plt.title('petal length vs petal width')
+plt.legend()
+plt.close()
+~~~
+{: .language-python}
 >![graph of the test regression data](../fig/standard_iris.png)
 {: .output}
 
@@ -70,26 +97,42 @@ When using the kmeans function, it's essential to specify the "centers" paramete
 Now lets try and cluster all the features
 
 ~~~
-set.seed(0)
-irisCluster <- kmeans(iris[,1:4], center=3, nstart=20)
-irisCluster
+from sklearn.cluster import KMeans
+kmeans = KMeans(n_clusters=3, random_state=0, n_init="auto").fit(iris_df.iloc[:,2:4])
+print(kmeans.cluster_centers_)
+print(kmeans.labels_)
 ~~~
-{: .language-r}
-
->![graph of the test regression data](../fig/kmean_cluster.png)
+{: .language-python}
+>[[1.462      0.246     ]
+>[5.59583333 2.0375    ]
+>[4.26923077 1.34230769]]
+>[0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+> 0 0 0 0 0 0 0 0 0 0 0 0 0 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2
+> 2 2 2 1 2 2 2 2 2 1 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 1 1 1 1 1 1 2 1 1 1 1
+> 1 1 1 1 1 1 1 1 2 1 1 1 1 1 1 2 1 1 1 1 1 1 1 1 1 1 1 2 1 1 1 1 1 1 1 1 1
+> 1 1]
+>
 {: .output}
 
 Now lets have a look at the 3 clusters the model has come up with. To do this we use a library called “cluster”, so we can see the regions/groups that the points have been separated into.
 
 ~~~
-library(ggplot2)
- 
-### Visualizing the clusters with species names
-ggplot(iris, aes(Sepal.Length, Sepal.Width, color = Cluster, label = Species)) +
-  geom_point() +
-  geom_text(check_overlap = TRUE, vjust = 1.5) +
-  labs(title = "Spectral Clustering of Iris Dataset",
-       x = "Sepal Length", y = "Sepal Width")
+iris_df["Kmeans_petal"] = kmeans.labels_
+
+sp = iris_df.drop_duplicates(subset=['Kmeans_petal'])
+sp = list(sp['Kmeans_petal'])
+
+for opt in sp:
+    subset_df = iris_df[iris_df['Kmeans_petal'] == opt ]
+    plt.scatter(subset_df['petal.length'], subset_df['petal.width'], 
+                label =opt)
+
+
+plt.xlabel('Petal Length (cm)')
+plt.ylabel('Petal Width (cm)')
+plt.title('Petal Length vs Petal Width')
+plt.legend()
+plt.show()
 ~~~
 {: .language-r}
 
@@ -138,38 +181,36 @@ Compute the eigenvalues (λ_1, λ_2, …, λ_n) and the corresponding eigenvecto
 Embedding
 
 Use the selected eigenvectors to embed the data into a lower-dimensional space. The eigenvectors represent new features that capture the underlying structure of the data. The matrix containing these eigenvectors is referred to as the spectral embedding.
-~~~
-### Using Euclidean distance as a similarity measure
-similarity_matrix <- exp(-dist(iris[, 1:4])^2 / (2 * 1^2))
- 
-### Compute Eigenvalues and Eigenvectors
-eigen_result <- eigen(similarity_matrix)
-eigenvalues <- eigen_result$values
-eigenvectors <- eigen_result$vectors
- 
-### Choose the First k Eigenvectors
-k <- 3 
-selected_eigenvectors <- eigenvectors[, 1:k]
- 
-### Apply K-Means Clustering
-cluster_assignments <- kmeans(selected_eigenvectors, centers = k)$cluster
- 
-### Add species information to the clustering results
-iris$Cluster <- factor(cluster_assignments)
-iris$Species <- as.character(iris$Species)
 
-### Plot the 
-
-library(ggplot2)
-
-ggplot(iris, aes(Sepal.Length, Sepal.Width, color = Cluster, label = Species)) +
-  geom_point() +
-  geom_text(check_overlap = TRUE, vjust = 1.5) +
-  labs(title = "Spectral Clustering with k-means of Iris Dataset",
-       x = "Sepal Length", y = "Sepal Width")
+The good thing is that we dont have to over complicate this as scikit learn already has one impletemented. 
 
 ~~~
-{: .language-r}
+from sklearn.cluster import SpectralClustering
+import numpy as np
+
+clustering = SpectralClustering(n_clusters=3,affinity='nearest_neighbors', assign_labels='kmeans').fit(iris_df.iloc[:,2:4])
+print(clustering.labels_)
+print(clustering)
+
+iris_df['cluster_petal'] = clustering.labels_
+
+sp = iris_df.drop_duplicates(subset=['cluster_petal'])
+sp = list(sp['cluster_petal'])
+
+for opt in sp:
+    subset_df = iris_df[iris_df['cluster_petal'] == opt ]
+    plt.scatter(subset_df['petal.length'], subset_df['petal.width'], 
+                label =opt)
+
+
+plt.xlabel('Petal Length (cm)')
+plt.ylabel('Petal Width (cm)')
+plt.title('Petal Length vs Petal Width')
+plt.legend()
+plt.show()
+
+~~~
+{: .language-python}
 
 
 >![graph of the test regression data](../fig/spectral_cluster.png)

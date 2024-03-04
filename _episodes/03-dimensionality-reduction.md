@@ -23,13 +23,21 @@ Dimensionality reduction serves as a potent technique for analysing and visualis
 # Examine the dataset
 Lets make some plots looking at each of our features, so we can see the distribution of our features.
 ~~~
-par(mfrow = c(2, 2))
-hist(iris$Sepal.Length, breaks = 20)
-hist(iris$Sepal.Width, breaks = 20)
-hist(iris$Petal.Length, breaks = 20)
-hist(iris$Petal.Width, breaks = 20)
+iris_df = pd.read_csv("iris.csv")
+
+columns = list(iris_df.keys())
+columns.remove("variety")
+
+fig = plt.figure()
+
+for i in range(0, len(columns)):
+    ax=fig.add_subplot(2,2,i+1)
+    iris_df[columns[i]].hist(ax=ax)
+    ax.set_title(columns[i])
+fig.tight_layout()  # Improves appearance a bit.
+plt.show()
 ~~~
-{: .language-r}
+{: .language-python}
 
 >![graph of the test regression data](../fig/iris_histograms.png)
 {: .output}
@@ -40,39 +48,51 @@ PCA is a technique that does rotations of data in a two dimensional array to dec
 
 ~~~
 # PCA
-pc <- prcomp(iris[,-5],center = T,scale. = T)
-pc
-summary(pc)
-~~~
-{: .language-r}
+import pandas as pd
+from sklearn.decomposition import PCA
 
-><pre style="color: black; background: white;">
->Standard deviations (1, .., p=4):
->[1] 1.7083611 0.9560494 0.3830886 0.1439265
->
->Rotation (n x k) = (4 x 4):
->                    PC1         PC2        PC3        PC4
->Sepal.Length  0.5210659 -0.37741762  0.7195664  0.2612863
->Sepal.Width  -0.2693474 -0.92329566 -0.2443818 -0.1235096
->Petal.Length  0.5804131 -0.02449161 -0.1421264 -0.8014492
->Petal.Width   0.5648565 -0.06694199 -0.6342727  0.5235971
->
->Importance of components:
-                          PC1    PC2     PC3     PC4
->Standard deviation     1.7084 0.9560 0.38309 0.14393
->Proportion of Variance 0.7296 0.2285 0.03669 0.00518
->Cumulative Proportion  0.7296 0.9581 0.99482 1.00000
-></pre>
+
+iris_df = pd.read_csv("iris.csv")
+
+subset_df = iris_df.iloc[:, :-1]
+print(subset_df.shape)
+
+pca = PCA(n_components=2).fit_transform(subset_df)
+
+print(pca.shape)
+
+~~~
+{: .language-python}
+
+>(150, 4)
+>(150, 2)
 {: .output}
 
 Now lets visualise our reduced features:
 
 
 ~~~
-library(ggbiplot)
-g <- ggbiplot(pc,obs.scale = 1, var.scale = 1, groups = iris$Species)
+import matplotlib.pyplot as plt
+
+iris_df["pca_x"] = pca[:, 0]
+iris_df["pca_y"] = pca[:, 0]
+
+sp = iris_df.drop_duplicates(subset=['variety'])
+sp = list(sp['variety'])
+print(iris_df.head())
+for opt in sp:
+    subset_df = iris_df[iris_df['variety'] == opt ]
+    plt.scatter(subset_df['pca_x'], subset_df['pca_y'], 
+                label =opt)
+
+
+plt.xlabel('PCA X')
+plt.ylabel('PCA Y')
+plt.title('PCA graph')
+plt.legend()
+#plt.close()
 ~~~
-{: .language-r}
+{: .language-python}
 
 >![graph of the test regression data](../fig/PCA_CHART.png)
 {: .output}
@@ -83,32 +103,47 @@ t-SNE is a statistical approach used to visually represent high-dimensional data
 
 ~~~
 # t-SNE embedding
-library(tsne)
-features <- subset(iris, select = -c(Species)) 
-set.seed(0)
-tsne <- tsne(features, initial_dims = 2)
-tsne <- data.frame(tsne)
-pdb <- cbind(tsne,iris$Species)
-summary(tsne)
-~~~
-{: .language-r}
+import pandas as pd
+from sklearn.manifold import TSNE
 
-><pre style="color: black; background: white;">
->       X1                X2           
-> Min.   :-16.857   Min.   :-5.276300  
-> 1st Qu.:-10.994   1st Qu.:-2.199154  
-> Median : -2.691   Median : 0.009581  
-> Mean   :  0.000   Mean   : 0.000000  
-> 3rd Qu.: 12.147   3rd Qu.: 2.051889  
-> Max.   : 20.724   Max.   : 5.731033 
-></pre>
+
+iris_df = pd.read_csv("iris.csv")
+
+subset_df = iris_df.iloc[:, :-1]
+print(subset_df.shape)
+
+ts = TSNE(n_components=2).fit_transform(subset_df)
+
+print(ts.shape)
+~~~
+{: .language-python}
+
+>(150, 4)
+>(150, 2)
 {: .output}
 
 ~~~
-plot(tsne, pch=21, bg=c("red","green3","blue")[unclass(iris$Species)], main="Iris Data")
-legend("top",levels(iris$Species), pch = 21, col = c("red","green3","blue")) 
+import matplotlib.pyplot as plt
+
+iris_df["tsne_x"] = ts[:, 0]
+iris_df["tsne_y"] = ts[:, 0]
+
+sp = iris_df.drop_duplicates(subset=['variety'])
+sp = list(sp['variety'])
+print(iris_df.head())
+for opt in sp:
+    subset_df = iris_df[iris_df['variety'] == opt ]
+    plt.scatter(subset_df['tsne_x'], subset_df['tsne_y'], 
+                label =opt)
+
+
+plt.xlabel('tsne X')
+plt.ylabel('tsne Y')
+plt.title('TSNE graph')
+plt.legend()
+#plt.close()
 ~~~
-{: .language-r}
+{: .language-python}
 
 >![graph of the test regression data](../fig/tsne_clusters.png)
 {: .output}
