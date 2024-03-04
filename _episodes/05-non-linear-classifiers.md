@@ -19,47 +19,44 @@ keypoints:
 The k-nearest Neighbours algorithm, commonly referred to as KNN or k-NN, is a supervised learning classifier that falls under the non-parametric category. It leverages proximity to classify or predict the grouping of a specific data point. Although it can tackle both regression and classification tasks, it is predominantly employed as a classification tool. The underlying principle is based on the assumption that similar data points tend to cluster together.
 In classification scenarios, the algorithm assigns a class label through a majority vote mechanism. In other words, the label that appears most frequently among neighboring data points is adopted. While technically termed "plurality voting," it is often referred to as "majority vote" in literature. The distinction lies in the requirement for a true majority (over 50%), which suits binary classification situations. In cases involving multiple classes (e.g., four categories), a conclusive decision regarding a class label can be made with a threshold vote exceeding 25%.
 
-Before we train any non-linear machine learning models, we need to divide our data into train and test sets. To do this we use a library called caTools. 
+Before we train any non-linear machine learning models, we need to divide our data into train and test sets. To do this we use a library called scikit learn. 
 Furthermore, traditionally machine learning models only accept inputs which are between zero and one. so we will also need to scale our data.  
 
 ~~~
-library(caTools)
+import matplotlib.pyplot as plt
+import pandas as pd
+import numpy as np
+from sklearn import neighbors
+from sklearn.model_selection import train_test_split
 
-set.seed(1)
-split = sample.split(iris$Sepal.Length, SplitRatio = 0.75)
-train = subset(iris, split==TRUE)
-test = subset(iris, split==FALSE)
 
-train_scaled = scale(train[-5])
-test_scaled = scale(test[-5])
+
+iris_df = pd.read_csv("iris.csv")
+
+
+iris_df['labels'] = iris_df.variety.astype('category').cat.codes
+
+X, y = iris_df.iloc[:, :4], iris_df['labels']
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.25, random_state = 0)
 train_scaled
 ~~~
-{: .language-r}
+{: .language-python}
 
-><pre style="color: black; background: white;">
->Sepal.Length  Sepal.Width Petal.Length  Petal.Width       setosa    virginica   versicolor 
->   5.8522124    3.0663717    3.6734513    1.1513274    0.3628319    0.3362832    0.3008850 
->attr(,"scaled:scale")
->Sepal.Length  Sepal.Width Petal.Length  Petal.Width       setosa    virginica   versicolor 
->   0.8523180    0.4524952    1.8304477    0.7617080    0.4829586    0.4745415    0.4606857 
-></pre>
-{: .output}
 
-Now lets build our self KNN model, which we use a library called class.
+Now lets build our self KNN model with scikit learn.
 
 ~~~
-library(class)
-test_pred <- knn(train = train_scaled, test = test_scaled,cl = train$Species, k=2)
-test_pred
+result = clf.predict(X_test)
+ground = np.array(y_test)
+print(result)
+
 ~~~
-{: .language-r}
+{: .language-python}
 
 ><pre style="color: black; background: white;">
-> [1] setosa     setosa     setosa     setosa     setosa     setosa     setosa     setosa     setosa     versicolor versicolor
->[12] versicolor versicolor versicolor versicolor versicolor versicolor versicolor versicolor versicolor versicolor versicolor
->[23] versicolor versicolor versicolor virginica  virginica  virginica  virginica  virginica  virginica  virginica  virginica 
->[34] virginica  virginica  virginica  virginica 
->Levels: setosa versicolor virginica
+>[2 1 0 2 0 2 0 1 1 1 2 1 1 1 1 0 1 1 0 0 2 1 0 0 2 0 0 1 1 0 2 1 0 2 2 1 0
+> 2]
 ></pre>
 {: .output}
 
@@ -68,11 +65,18 @@ test_pred
 To look at how our model performed, there are a number of ways you could look at it. The best way is to have look at the confusion matrix and luckily in R there is a built in function that does this for us. All we have to do is pass our prediction results to the table function. Furthermore, by summing the diagonal and dividing by the length of our test set we can come up with an accuracy value. 
 
 ~~~
-actual <- test$Species
-cm <- table(actual,test_pred)
-cm
-accuracy <- sum(diag(cm))/length(actual)
-sprintf("Accuracy: %.f%%", accuracy*100)
+from sklearn.metrics import confusion_matrix
+
+
+matrix = confusion_matrix(ground, result)#confusion_matrix(truth, prediction)
+print(matrix)
+
+count = 0 
+
+for row in range(0, y_test.shape[0]):
+    if result[row] == ground[row]:
+        count += 1
+print((count/y_test.shape[0])*100)
 
 ~~~
 {: .language-r}
@@ -80,13 +84,10 @@ sprintf("Accuracy: %.f%%", accuracy*100)
 
 
 ~~~
-"Accuracy: 92%"
-
-           test_pred
-actual       setosa versicolor virginica
-setosa          9          0         0
-versicolor      0         16         0
-virginica       0          3         9
+[[13  0  0]
+ [ 0 15  1]
+ [ 0  0  9]]
+97.36842105263158
 ~~~
 {: .output}
 
@@ -111,30 +112,54 @@ The Support Vector Machine (SVM) emerges as a formidable supervised algorithm, d
 So to create a SVM model, we are going to use the library called "e1071". We are also going to use our train/test separations from above.
 
 ~~~
-library(e1071)
-Species <- train$Species
-svm_model <- svm(Species ~ ., data=train_scaled, kernel="linear") #linear/polynomial/sigmoid
+import matplotlib.pyplot as plt
+import pandas as pd
+import numpy as np
+from sklearn.svm import SVC
+from sklearn.model_selection import train_test_split
+
+
+
+iris_df = pd.read_csv("iris.csv")
+
+
+iris_df['labels'] = iris_df.variety.astype('category').cat.codes
+
+X, y = iris_df.iloc[:, :4], iris_df['labels']
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.25, random_state = 0)
+clf = SVC(kernel = 'poly', random_state = 0)
+
+clf.fit(X_train, y_train)
 ~~~
-{: .language-r}
+{: .language-python}
 
 Now lets have ago at predicting our test set using the SVM model. Again we are going to produce a confusion matrix and generate an accuracy score.
 
 ~~~
-pred = predict(svm_model,test_scaled)
-tab = table(Predicted=pred, Actual = test$Species)
-tab
-accuracy <- sum(diag(tab))/length(test$Species)
-> sprintf("Accuracy: %.f%%", accuracy*100)
+result = clf.predict(X_test)
+ground = np.array(y_test)
+print(result)
+
+from sklearn.metrics import confusion_matrix
+
+
+matrix = confusion_matrix(ground, result)#confusion_matrix(truth, prediction)
+print(matrix)
+
+count = 0 
+
+for row in range(0, y_test.shape[0]):
+    if result[row] == ground[row]:
+        count += 1
+print((count/y_test.shape[0])*100)
 ~~~
 {: .language-r}
 ~~~
-"Accuracy: 92%"
-
-            Actual
-Predicted    setosa versicolor virginica
-setosa          9          0         0
-versicolor      0         16         3
-virginica       0          0         9
+[[13  0  0]
+ [ 0 15  1]
+ [ 0  0  9]]
+97.36842105263158
 ~~~
 {: .output}
 

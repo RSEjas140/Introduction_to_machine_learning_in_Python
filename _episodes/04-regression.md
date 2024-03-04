@@ -25,12 +25,20 @@ We now possess a basic linear model for a given dataset. It would be valuable to
 
 Any easy way to calculate our intercepts is to use least squares fit. 
 ~~~
-lsfit(iris$Petal.Length, iris$Petal.Width)$coefficients
+iris_df = pd.read_csv("iris.csv")
+
+slope, intercept, r, p, std_err = stats.linregress(iris_df['petal.length'], iris_df['petal.width'])
+
+def myfunc(x):
+  return slope * x + intercept
+
+mymodel = list(map(myfunc, iris_df['petal.length']))
+print(intercept)
 ~~~
-{: .language-r}
+{: .language-python}
 ~~~
 Intercept X
--0.3630755 0.4157554 .4
+-0.3630755
 ~~~
 {: .output}
 
@@ -47,53 +55,57 @@ legend("top",levels(iris$Species), pch = 21, col = c("red","green3","blue"))
 
 So lets now have ago at building a linear model instead using "lm"
 ~~~
-lm(Petal.Width ~ Petal.Length, data=iris)$coefficients
+import matplotlib.pyplot as plt
+import pandas as pd
+from sklearn.linear_model import LinearRegression
+
+import numpy as np
+
+
+
+iris_df = pd.read_csv("iris.csv")
+
+from sklearn.model_selection import train_test_split
+
+iris_df['labels'] = iris_df.variety.astype('category').cat.codes
+
+
+
+y= iris_df['petal.length']
+
+
+iris_df = iris_df.drop(labels= 'petal.length', axis = 1)
+iris_df = iris_df.drop(labels = 'variety', axis=1)
+
+X_train, X_test, y_train, y_test = train_test_split(iris_df, y, test_size= 0.33, random_state= 101)
+reg = LinearRegression().fit(X_train, y_train)
+
+print(reg.intercept_)
 ~~~
-{: .language-r}
+{: .language-python}
 
 ~~~
-(Intercept) Petal.Length
--0.3630755 0.4157554 
+
+-0.22183715030556383
 ~~~
 {: .output}
 
-Again lets plot our linear model
+lets predict a measure for petal length using our linear model
 
 ~~~
-plot(iris$Petal.Length, iris$Petal.Width, pch=21, bg=c("red","green3","blue")[unclass(iris$Species)], main="Edgar Anderson's Iris Data", xlab="Petal length", ylab="Petal width")
-abline(lm(Petal.Width ~ Petal.Length, data=iris)$coefficients, col="black")
-legend("top",levels(iris$Species), pch = 21, col = c("red","green3","blue")) 
+reg.predict(X_test)
+pred = reg.predict(X_test)
+
+pred = reg.predict(X_test)
+print('Predicted petal length (cm):', pred[0])
+print('Actual petal length (cm):', 1.4)
 ~~~
-{: .language-r}
-
->![graph of the test regression data](../fig/petal_l_w.png)
-{: .output}
-
-We can also look at how well our linear model fits the data by examining the p values.
+{: .language-python}
 
 ~~~
-summary(lm(Petal.Width ~ Petal.Length, data=iris))
-~~~
-{: .language-r}
 
-~~~
-Call:
-lm(formula = Petal.Width ~ Petal.Length, data = iris)
-
-Residuals:
-     Min       1Q   Median       3Q      Max 
--0.56515 -0.12358 -0.01898  0.13288  0.64272 
-
-Coefficients:
-              Estimate Std. Error t value Pr(>|t|)    
-(Intercept)  -0.363076   0.039762  -9.131  4.7e-16 ***
-Petal.Length  0.415755   0.009582  43.387  < 2e-16 ***
-
-Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
-
-Residual standard error: 0.2065 on 148 degrees of freedom
-Multiple R-squared:  0.9271,	Adjusted R-squared:  0.9266 
-F-statistic:  1882 on 1 and 148 DF,  p-value: < 2.2e-16
+Predicted petal length (cm): 1.37097289501913
+Actual petal length (cm): 1.4
 ~~~
 {: .output}
 
@@ -123,103 +135,105 @@ We’ve now seen how we can use linear regression to make a simple model and use
 This time instead of focusing on plotting, were going to use logistic regression as a classifier. First we need to prepossess our data set by splitting it into training and test data. Then we will apply logistic regression using the binomial family using the sepal length feature.
 
 ~~~
-library(caTools)
+import matplotlib.pyplot as plt
+import pandas as pd
 
-set.seed(1)
-split = sample.split(iris$Sepal.Length, SplitRatio = 0.75)
-train = subset(iris, split==TRUE)
-test = subset(iris, split==FALSE)
-y<-train$Species; x<-train$Sepal.Length
-glfit<-glm(y~x, family = 'binomial')
-summary(glfit)
+
+import numpy as np
+
+
+
+iris_df = pd.read_csv("iris.csv")
+
+from sklearn.model_selection import train_test_split
+
+# Splitting the dataset into the Training set and Test set
+X = iris_df.iloc[:, :4]
+y = iris_df.iloc[:, 4]
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.25, random_state = 0)
+from sklearn.preprocessing import StandardScaler
+sc = StandardScaler()
+X_train = sc.fit_transform(X_train)
+X_test = sc.transform(X_test)
+
+
+# Fitting Logistic Regression to the Training set
+from sklearn.linear_model import LogisticRegression
+classifier = LogisticRegression(random_state = 0, solver='lbfgs', multi_class='auto')
+classifier.fit(X_train, y_train)
+print(classifier)
 ~~~
-{: .language-r}
+{: .language-python}
 
-><pre style="color: black; background: white;">
->## Call:
->## glm(formula = y ~ x, family = "binomial")
->## 
->## Deviance Residuals: 
->##      Min        1Q    Median        3Q       Max  
->## -1.94538  -0.50121   0.04079   0.45923   2.26238  
->## 
->## Coefficients:
->##             Estimate Std. Error z value Pr(>|z|)    
->## (Intercept)  -25.386      5.517  -4.601 4.20e-06 ***
->## x              4.675      1.017   4.596 4.31e-06 ***
->## ---
->## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
->## 
->## (Dispersion parameter for binomial family taken to be 1)
->## 
->##     Null deviance: 110.854  on 79  degrees of freedom
->## Residual deviance:  56.716  on 78  degrees of freedom
->## AIC: 60.716
->## 
->## Number of Fisher Scoring iterations: 6
-></pre>
+~~~
+
+LogisticRegression(random_state=0)
+~~~
 {: .output}
 
 So we have now created our model and we want to predict some of the samples in our test set.
 ~~~
-newdata<- data.frame(x=test$Sepal.Length)
-predicted_val<-predict(glfit, newdata, type="response")
-prediction<-data.frame(test$Sepal.Length, test$Species,predicted_val)
-prediction
+# Predicting the Test set results
+y_pred = classifier.predict(X_test)
+# Predict probabilities
+probs_y=classifier.predict_proba(X_test)### Print results 
+probs_y = np.round(probs_y, 2)
+res = "{:<10} | {:<10} | {:<10} | {:<13} | {:<5}".format("y_test", "y_pred", "Setosa(%)", "versicolor(%)", "virginica(%)\n")
+res += "-"*65+"\n"
+res += "\n".join("{:<10} | {:<10} | {:<10} | {:<13} | {:<10}".format(x, y, a, b, c) for x, y, a, b, c in zip(y_test, y_pred, probs_y[:,0], probs_y[:,1], probs_y[:,2]))
+res += "\n"+"-"*65+"\n"
+print(res)
 ~~~
-{: .language-r}
+{: .language-python}
 
 ><pre style="color: black; background: white;">
->   test.Sepal.Length test.Species predicted_val
->1                4.6       setosa   0.014429053
->2                5.0       setosa   0.098256223
->3                4.8       setosa   0.038406518
->4                5.4       setosa   0.447809228
->5                5.1       setosa   0.152523368
->6                4.9       setosa   0.061887119
->7                4.4       setosa   0.005337797
->8                5.1       setosa   0.152523368
->9                5.0       setosa   0.098256223
->10               6.4   versicolor   0.991906259
->11               6.5   versicolor   0.995084059
->12               5.2   versicolor   0.229146102
->13               6.1   versicolor   0.964535637
->14               5.6   versicolor   0.688708107
->15               5.9   versicolor   0.908836090
->16               6.8   versicolor   0.998904845
->17               6.7   versicolor   0.998192419
->18               5.5   versicolor   0.572554250
->19               5.8   versicolor   0.857868639
->20               5.4   versicolor   0.447809228
->21               6.0   versicolor   0.942746684
->22               6.3   versicolor   0.986701696
->23               5.6   versicolor   0.688708107
->24               5.5   versicolor   0.572554250
->25               5.7   versicolor   0.785142952
->26               4.9    virginica   0.061887119
->27               7.2    virginica   0.999852714
->28               5.7    virginica   0.785142952
->29               5.8    virginica   0.857868639
->30               6.4    virginica   0.991906259
->31               6.1    virginica   0.964535637
->32               7.7    virginica   0.999988017
->33               6.3    virginica   0.986701696
->34               6.0    virginica   0.942746684
->35               6.9    virginica   0.999336667
->36               6.7    virginica   0.998192419
->37               6.2    virginica   0.978223885
+>y_test     | y_pred     | Setosa(%)  | versicolor(%) | virginica(%)
+>-----------------------------------------------------------------
+>Virginica  | Virginica  | 0.0        | 0.03          | 0.97      
+>Versicolor | Versicolor | 0.01       | 0.95          | 0.04      
+>Setosa     | Setosa     | 1.0        | 0.0           | 0.0       
+>Virginica  | Virginica  | 0.0        | 0.08          | 0.92      
+>Setosa     | Setosa     | 0.98       | 0.02          | 0.0       
+>Virginica  | Virginica  | 0.0        | 0.01          | 0.99      
+>Setosa     | Setosa     | 0.98       | 0.02          | 0.0       
+>Versicolor | Versicolor | 0.01       | 0.71          | 0.28      
+>Versicolor | Versicolor | 0.0        | 0.73          | 0.27      
+>Versicolor | Versicolor | 0.02       | 0.89          | 0.08      
+>Virginica  | Virginica  | 0.0        | 0.44          | 0.56      
+>Versicolor | Versicolor | 0.02       | 0.76          | 0.22      
+>Versicolor | Versicolor | 0.01       | 0.85          | 0.13      
+>Versicolor | Versicolor | 0.0        | 0.69          | 0.3       
+>Versicolor | Versicolor | 0.01       | 0.75          | 0.24      
+>Setosa     | Setosa     | 0.99       | 0.01          | 0.0       
+>Versicolor | Versicolor | 0.02       | 0.72          | 0.26      
+>Versicolor | Versicolor | 0.03       | 0.86          | 0.11      
+>Setosa     | Setosa     | 0.94       | 0.06          | 0.0       
+>Setosa     | Setosa     | 0.99       | 0.01          | 0.0       
+>Virginica  | Virginica  | 0.0        | 0.17          | 0.83      
+>Versicolor | Versicolor | 0.04       | 0.71          | 0.25      
+>Setosa     | Setosa     | 0.98       | 0.02          | 0.0       
+>Setosa     | Setosa     | 0.96       | 0.04          | 0.0       
+>Virginica  | Virginica  | 0.0        | 0.35          | 0.65      
+>Setosa     | Setosa     | 1.0        | 0.0           | 0.0       
+>Setosa     | Setosa     | 0.99       | 0.01          | 0.0       
+>Versicolor | Versicolor | 0.02       | 0.87          | 0.11      
+>Versicolor | Versicolor | 0.09       | 0.9           | 0.02      
+>Setosa     | Setosa     | 0.97       | 0.03          | 0.0       
+>Virginica  | Virginica  | 0.0        | 0.21          | 0.79      
+>Versicolor | Versicolor | 0.06       | 0.69          | 0.25      
+>Setosa     | Setosa     | 0.98       | 0.02          | 0.0       
+>Virginica  | Virginica  | 0.0        | 0.35          | 0.65      
+>Virginica  | Virginica  | 0.0        | 0.04          | 0.96      
+>Versicolor | Versicolor | 0.07       | 0.81          | 0.11      
+>Setosa     | Setosa     | 0.97       | 0.03          | 0.0       
+>Versicolor | Virginica  | 0.0        | 0.42          | 0.58      
+>-----------------------------------------------------------------
 ></pre>
 {: .output}
 
 Looking at our results, the prediction val column give thew prediction confidence that said belongs to that class. typically in machine learning we use the 0.5 confidence threshold. Now lest have a look at what our chat looks like.
 
-~~~
-qplot(prediction[,1], round(prediction[,3]), col=prediction[,2], xlab = 'Sepal Length', ylab = 'Prediction using Logistic Reg.')
-~~~
-{: .language-r}
-
->![graph of the test regression data](../fig/logethrimic_chart.png)
-{: .output}
 
 > ## trying different features
 >

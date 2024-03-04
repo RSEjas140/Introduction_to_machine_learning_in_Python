@@ -74,68 +74,88 @@ We're preparing to construct a multi-layer perceptron to predict species in the 
 Before delving into the construction, let's organize our data for ingestion into the neural network:
 
 ~~~
-data(iris)
-iris$setosa <- iris$Species=="setosa"
-iris$virginica <- iris$Species == "virginica"
-iris$versicolor <- iris$Species == "versicolor"
-iris.train.idx <- sample(x = nrow(iris), size = nrow(iris)*0.5)
-iris.train <- iris[iris.train.idx,]
-iris.valid <- iris[-iris.train.idx,]
+import matplotlib.pyplot as plt
+import pandas as pd
+import numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import OneHotEncoder, LabelEncoder, StandardScaler
+
+import tensorflow as tf
+
+
+
+iris_df = pd.read_csv("iris.csv")
+
+
+lbl_clf = LabelEncoder()
+Y_encoded = lbl_clf.fit_transform(iris_df['variety'])
+
+#Keras requires your output feature to be one-hot encoded values.
+Y_final = tf.keras.utils.to_categorical(Y_encoded)
+
+
+X_train, X_test, y_train, y_test = train_test_split(iris_df.iloc[:, :4], Y_final, test_size = 0.25, random_state = 0)
+
+
+std_clf = StandardScaler()
+x_train_new = std_clf.fit_transform(X_train)
+x_test_new = std_clf.transform(X_test)
+print(x_train_new)
+print(y_train)
 ~~~
-{: .language-r}
+{: .language-python}
 
 Now lets build our neural network, to which we use a library called neuralnet:
 ~~~
-iris.net <- neuralnet(setosa+versicolor+virginica ~ 
-                      Sepal.Length + Sepal.Width + Petal.Length + Petal.Width, 
-                      data=iris.train, hidden=c(10,10), rep = 5, err.fct = "ce", 
-                      linear.output = F, lifesign = "minimal", stepmax = 1000000,
-                      threshold = 0.001)
+model = tf.keras.models.Sequential()
+model.add(tf.keras.layers.Dense(10, input_dim=4, activation=tf.nn.relu, kernel_initializer='he_normal', 
+                                kernel_regularizer=tf.keras.regularizers.l2(0.01)))
+model.add(tf.keras.layers.BatchNormalization())
+model.add(tf.keras.layers.Dropout(0.3))
+model.add(tf.keras.layers.Dense(7, activation=tf.nn.relu, kernel_initializer='he_normal', 
+                                kernel_regularizer=tf.keras.regularizers.l1_l2(l1=0.001, l2=0.001)))
+model.add(tf.keras.layers.BatchNormalization())
+model.add(tf.keras.layers.Dropout(0.3))
+model.add(tf.keras.layers.Dense(5, activation=tf.nn.relu, kernel_initializer='he_normal', 
+                                kernel_regularizer=tf.keras.regularizers.l1_l2(l1=0.001, l2=0.001)))
+model.add(tf.keras.layers.Dense(3, activation=tf.nn.softmax))
+
+model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+
+iris_model = model.fit(x_train_new, y_train, epochs=10, batch_size=7)
 ~~~
-{: .language-r}
+{: .language-python}
 
 ><pre style="color: black; background: white;">
->hidden: 10, 10    thresh: 0.001    rep: 1/5    steps:    1763	error: 0.00011	time: 0.29 secs
->hidden: 10, 10    thresh: 0.001    rep: 2/5    steps:     661	error: 0.00035	time: 0.1 secs
->hidden: 10, 10    thresh: 0.001    rep: 3/5    steps:     688	error: 0.00044	time: 0.1 secs
->hidden: 10, 10    thresh: 0.001    rep: 4/5    steps:    1014	error: 0.00018	time: 0.15 secs
->hidden: 10, 10    thresh: 0.001    rep: 5/5    steps:    1023	error: 0.00023	time: 0.15 secs
+>Epoch 1/5
+>16/16 [==============================] - 1s 2ms/step - loss: 1.5008 - accuracy: 0.3929
+>Epoch 2/5
+>16/16 [==============================] - 0s 2ms/step - loss: 1.4058 - accuracy: 0.3929
+>Epoch 3/5
+>16/16 [==============================] - 0s 2ms/step - loss: 1.3837 - accuracy: 0.3929
+>Epoch 4/5
+>16/16 [==============================] - 0s 2ms/step - loss: 1.2541 - accuracy: 0.4911
+>Epoch 5/5
+>16/16 [==============================] - 0s 2ms/step - loss: 1.2644 - accuracy: 0.4911
 ></pre>
 {: .output}
 
-Now lets take a look at our trained neural network:
-~~~
-plot(iris.net, rep="best")
-~~~
-{: .language-r}
 
->![graph of the test regression data](../fig/Neural_Net.png)
-{: .output}
 ## Prediction using a multi-layer perceptron
 ### Confusion Matrix
 
 To look at how our model performed, there are a number of ways you could look at it. The best way is to have look at the confusion matrix and luckily in R there is a built in function that does this for us. All we have to do is pass our prediction results to the table function. Furthermore, by summing the diagonal and dividing by the length of our test set we can come up with an accuracy value. 
 
 ~~~
-iris.prediction <- compute(iris.net, iris.valid[-5:-8])
-idx <- apply(iris.prediction$net.result, 1, which.max)
-predicted <- c('setosa', 'versicolor', 'virginica')[idx]
-cm <- table(predicted, iris.valid$Species)
-accuracy <- sum(diag(cm))/length(iris.valid$Species)
-sprintf("Accuracy: %.f%%", accuracy*100)
+model.evaluate(x_test_new, y_test)
 ~~~
-{: .language-r}
+{: .language-python}
 
 
 
-><pre style="color: black; background: white;">
->predicted    setosa versicolor virginica
->  setosa         25          0         0
->  versicolor      0         23         2
->  virginica       0          2        23
->
->[1] Accuracy: 95%
-></pre>
+~~~
+[1.1292672157287598, 0.7105262875556946]
+~~~
 {: .output}
 
 
@@ -143,62 +163,7 @@ sprintf("Accuracy: %.f%%", accuracy*100)
 > There are a number of characteristics you can change in your model, that may increase or decrease the performance of your model. have ago at adjusting the number of steps, linear output ("T" or "F") and number of hidden layers.
 {: .challenge}
 
-## Statistical test Manova
 
-Its important to use a statistical test when you are trying to prove that your model is obtaining an improved performance over a different model. As a statistical test is a procedure for deciding whether an assertion (e. g. a hypothesis) about a quantitative feature of a population is true or false. We test a hypothesis of this sort by comparing the populations/predictions from each of the models. There are a lot of statistical test that exist, which all have particular use cases. Therefore, it is important to do your research before deciding on a particular test that you want to use. for this examples we are going to use manova, which is useful for finding statistical different between a group of two or more models. 
-
-So lets run a manova, to see if there is any statistical difference. Firstly lets run it on our dataset:
-
-~~~
-sepl <- iris$Sepal.Length
-petl <- iris$Petal.Length
-res.man <- manova(cbind(Sepal.Length, Petal.Length) ~ Species, data = iris)
-summary(res.man)
-summary.aov(res.man)
-~~~
-{: .language-r}
-
-><pre style="color: black; background: white;">
->           Df Pillai approx F num Df den Df    Pr(>F)    
->Species     2 0.9885   71.829      4    294 < 2.2e-16 ***
->Residuals 147                                            
->Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
->
-> Response Sepal.Length :
->             Df Sum Sq Mean Sq F value    Pr(>F)    
->Species       2 63.212  31.606  119.26 < 2.2e-16 ***
->Residuals   147 38.956   0.265                      
->
->Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
->
-> Response Petal.Length :
->             Df Sum Sq Mean Sq F value    Pr(>F)    
->Species       2 437.10 218.551  1180.2 < 2.2e-16 ***
->Residuals   147  27.22   0.185                      
->
->Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
->
-></pre>
-{: .output}
-
-So we may not have multiple models to test, but luckily every iteration that our model ran gives us a results. so what we can do is compare the iterations to see which one was the best
-
-~~~
-data_frm <- data.frame(iris.prediction)
-data_frm$Species = iris.valid$Species
-res.man <- manova(cbind(data_frm$net.result.1, data_frm$net.result.2, data_frm$net.result.3) ~ Species, data = data_frm)
-summary(res.man)
-~~~
-{: .language-r}
-
-><pre style="color: black; background: white;">
->          Df Pillai approx F num Df den Df    Pr(>F)    
->Species    2 1.7747   186.43      6    142 < 2.2e-16 ***
->Residuals 72                                            
->
->Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
-></pre>
-{: .output}
 
 ### Cloud APIs
 
