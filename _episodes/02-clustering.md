@@ -132,7 +132,7 @@ plt.title('Petal Length vs Petal Width')
 plt.legend()
 plt.show()
 ~~~
-{: .language-r}
+{: .language-python}
 
 >![graph of the test regression data](../fig/cluster_iris.png)
 {: .output}

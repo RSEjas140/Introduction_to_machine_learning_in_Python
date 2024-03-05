@@ -25,6 +25,9 @@ We now possess a basic linear model for a given dataset. It would be valuable to
 
 Any easy way to calculate our intercepts is to use least squares fit. 
 ~~~
+import matplotlib.pyplot as plt
+import pandas as pd
+from scipy import stats
 iris_df = pd.read_csv("iris.csv")
 
 slope, intercept, r, p, std_err = stats.linregress(iris_df['petal.length'], iris_df['petal.width'])
@@ -44,11 +47,23 @@ Intercept X
 
 So now we have our intercepts, lets plot our line of best fit to our data.
 ~~~
-plot(iris$Petal.Length, iris$Petal.Width, pch=21, bg=c("red","green3","blue")[unclass(iris$Species)], main="Edgar Anderson's Iris Data", xlab="Petal length", ylab="Petal width")
-abline(lsfit(iris$Petal.Length, iris$Petal.Width)$coefficients, col="black")
-legend("top",levels(iris$Species), pch = 21, col = c("red","green3","blue")) 
+sp = iris_df.drop_duplicates(subset=['variety'])
+sp = list(sp['variety'])
+print(iris_df.head())
+for opt in sp:
+    subset_df = iris_df[iris_df['variety'] == opt ]
+    plt.scatter(subset_df['petal.length'], subset_df['petal.width'], 
+                label =opt)
+
+
+plt.xlabel('petal length (cm)')
+plt.ylabel('petal width (cm)')
+plt.title('petal length vs petal width')
+plt.plot(iris_df['petal.length'], mymodel)
+plt.legend()
+plt.show() 
 ~~~
-{: .language-r}
+{: .language-python}
 
 >![graph of the test regression data](../fig/petal_l_w.png)
 {: .output}

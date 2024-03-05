@@ -154,7 +154,7 @@ for row in range(0, y_test.shape[0]):
         count += 1
 print((count/y_test.shape[0])*100)
 ~~~
-{: .language-r}
+{: .language-python}
 ~~~
 [[13  0  0]
  [ 0 15  1]
