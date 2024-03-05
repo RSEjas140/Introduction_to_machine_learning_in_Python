@@ -50,7 +50,7 @@ So firstly lets have a look at the features within our dataset:
 ~~~
 print(iris_df.head())
 ~~~
-{: .language-r}
+{: .language-python}
 
 ><pre style="color: black; background: white;">
 >  Sepal.Length Sepal.Width Petal.Length Petal.Width Species
@@ -65,11 +65,6 @@ print(iris_df.head())
 
 we could also compare different features, lets compare Petal length against Petal width:
 
-~~~
-plot(iris$Petal.Length, iris$Petal.Width, pch=21, bg=c("red","green3","blue")[unclass(iris$Species)], main="Iris Data")
-legend("top", levels(iris$Species), pch = 21,col = c("red","green3","blue")) 
-~~~
-{: .language-r}
 
 ~~~
 ### !pip install pandas
