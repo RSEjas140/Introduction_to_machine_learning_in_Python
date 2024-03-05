@@ -148,13 +148,40 @@ To look at how our model performed, there are a number of ways you could look at
 
 ~~~
 model.evaluate(x_test_new, y_test)
+
+
+results = model.predict(x_test_new)
+
+def convert_labels(array):
+    collection = []
+    for ii in range(array.shape[0]):
+        val = np.argmax(array[ii,:])
+        lab = np.zeros((1, array.shape[1]))
+        lab[:,val] = 1
+        collection.append(lab)
+        
+    collection = np.array(collection)
+    collection = np.squeeze(collection)
+    return collection
+
+
+argmax_results = convert_labels(results)
+CON_MATRIX = skm.multilabel_confusion_matrix(y_test, argmax_results)
+print(CON_MATRIX)
 ~~~
 {: .language-python}
 
 
 
 ~~~
-[1.1292672157287598, 0.7105262875556946]
+[[[25  0]
+  [13  0]]
+
+ [[ 9 13]
+  [16  0]]
+
+ [[13 16]
+  [ 0  9]]]
 ~~~
 {: .output}
 
