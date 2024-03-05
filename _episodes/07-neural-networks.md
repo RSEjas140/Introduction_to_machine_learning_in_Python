@@ -74,6 +74,7 @@ We're preparing to construct a multi-layer perceptron to predict species in the 
 Before delving into the construction, let's organize our data for ingestion into the neural network:
 
 ~~~
+### !pip install tensorflow
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np

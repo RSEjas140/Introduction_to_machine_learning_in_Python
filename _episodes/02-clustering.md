@@ -72,6 +72,8 @@ legend("top", levels(iris$Species), pch = 21,col = c("red","green3","blue"))
 {: .language-r}
 
 ~~~
+### !pip install pandas
+### !pip install matplotlib
 sp = iris_df.drop_duplicates(subset=['variety'])
 sp = list(sp['variety'])
 print(iris_df.head())
@@ -97,6 +99,7 @@ When using the kmeans function, it's essential to specify the "centers" paramete
 Now lets try and cluster all the features
 
 ~~~
+### !pip install scikit-learn
 from sklearn.cluster import KMeans
 kmeans = KMeans(n_clusters=3, random_state=0, n_init="auto").fit(iris_df.iloc[:,2:4])
 print(kmeans.cluster_centers_)
@@ -178,7 +181,7 @@ Normalized Laplacian: L_norm = I – D^(-1/2) * A * D^(-1/2), where D^(-1/2) is 
 ### Eigenvalue Decomposition
 
 Compute the eigenvalues (λ_1, λ_2, …, λ_n) and the corresponding eigenvectors (v_1, v_2, …, v_n) of the Laplacian matrix. You typically compute a few eigenvectors, corresponding to the smallest non-zero eigenvalues.
-Embedding
+###Embedding
 
 Use the selected eigenvectors to embed the data into a lower-dimensional space. The eigenvectors represent new features that capture the underlying structure of the data. The matrix containing these eigenvectors is referred to as the spectral embedding.
 
