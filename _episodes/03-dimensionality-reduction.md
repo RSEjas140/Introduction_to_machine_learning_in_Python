@@ -75,7 +75,7 @@ Now lets visualise our reduced features:
 import matplotlib.pyplot as plt
 
 iris_df["pca_x"] = pca[:, 0]
-iris_df["pca_y"] = pca[:, 0]
+iris_df["pca_y"] = pca[:, 1]
 
 sp = iris_df.drop_duplicates(subset=['variety'])
 sp = list(sp['variety'])
@@ -126,7 +126,7 @@ print(ts.shape)
 import matplotlib.pyplot as plt
 
 iris_df["tsne_x"] = ts[:, 0]
-iris_df["tsne_y"] = ts[:, 0]
+iris_df["tsne_y"] = ts[:, 1]
 
 sp = iris_df.drop_duplicates(subset=['variety'])
 sp = list(sp['variety'])
