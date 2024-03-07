@@ -81,7 +81,7 @@ for row in range(0, y_test.shape[0]):
 print((count/y_test.shape[0])*100)
 
 ~~~
-{: .language-r}
+{: .language-python}
 
 
 
@@ -109,9 +109,9 @@ The Support Vector Machine (SVM) emerges as a formidable supervised algorithm, d
 - When the number of features significantly exceeds the number of samples, guarding against over-fitting necessitates careful selection of Kernel functions and regularization terms.
 - Direct probability estimates are not provided by SVMs; obtaining such estimates involves resource-intensive techniques like five-fold cross-validation (refer to Scores and probabilities).
 
-### SVM in R
+### SVM in Python
 
-So to create a SVM model, we are going to use the library called "e1071". We are also going to use our train/test separations from above.
+So to create a SVM model, we are going to use the library called scikitlearn. We are also going to use our train/test separations from above.
 
 ~~~
 import matplotlib.pyplot as plt
@@ -167,8 +167,8 @@ print((count/y_test.shape[0])*100)
 
 > ## different non-linear classifier
 >
-> Have ago at implementing a different non-linear classifier. examples of decision tree can be found at: https://www.datacamp.com/tutorial/decision-trees-R
-> Or even Random forest: https://www.r-bloggers.com/2021/04/random-forest-in-r/
+> Have ago at implementing a different non-linear classifier. examples of decision tree can be found at: https://www.datacamp.com/tutorial/decision-tree-classification-python
+> Or even Random forest: https://www.datacamp.com/tutorial/random-forests-classifier-python
 {: .challenge}
 
 
