@@ -39,7 +39,9 @@ iris_df['labels'] = iris_df.variety.astype('category').cat.codes
 X, y = iris_df.iloc[:, :4], iris_df['labels']
 
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.25, random_state = 0)
-train_scaled
+clf = neighbors.KNeighborsClassifier(n_neighbors=5)
+
+clf.fit(X_train, y_train)
 ~~~
 {: .language-python}
 
