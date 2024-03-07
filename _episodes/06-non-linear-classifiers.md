@@ -67,7 +67,7 @@ print(result)
 To look at how our model performed, there are a number of ways you could look at it. The best way is to have look at the confusion matrix and luckily in R there is a built in function that does this for us. All we have to do is pass our prediction results to the table function. Furthermore, by summing the diagonal and dividing by the length of our test set we can come up with an accuracy value. 
 
 ~~~
-from sklearn.metrics import confusion_matrix
+from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 
 
 matrix = confusion_matrix(ground, result)#confusion_matrix(truth, prediction)
@@ -80,6 +80,9 @@ for row in range(0, y_test.shape[0]):
         count += 1
 print((count/y_test.shape[0])*100)
 
+sp = iris_df.drop_duplicates(subset=['variety'])
+disp = ConfusionMatrixDisplay(confusion_matrix=matrix,display_labels=list(sp['variety']))
+disp.plot()
 ~~~
 {: .language-python}
 
