@@ -148,6 +148,7 @@ iris_model = model.fit(x_train_new, y_train, epochs=10, batch_size=7)
 To look at how our model performed, there are a number of ways you could look at it. The best way is to have look at the confusion matrix and luckily in R there is a built in function that does this for us. All we have to do is pass our prediction results to the table function. Furthermore, by summing the diagonal and dividing by the length of our test set we can come up with an accuracy value. 
 
 ~~~
+import sklearn.metrics as skm
 model.evaluate(x_test_new, y_test)
 
 
